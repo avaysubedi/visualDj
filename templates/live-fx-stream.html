@@ -1,0 +1,14 @@
+<body>
+    <button onclick="startShow()">▶ Start Show</button>
+    <img id="liveVideo" style="display:none;" src="/live-fx-stream" alt="Stream failed">
+    <audio id="music" src="/static/music/song.mp3"></audio>
+  
+    <script>
+      function startShow() {
+        document.getElementById('liveVideo').style.display = 'block';
+        const music = document.getElementById('music');
+        music.play().catch(err => console.log('Audio play failed:', err));
+      }
+    </script>
+  </body>
+  
