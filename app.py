@@ -7,7 +7,6 @@ import random
 import numpy as np
 import mimetypes
 from urllib.parse import unquote
-import mediapipe as mp
 import subprocess
 import time
 from effects import apply_effect, get_random_effect
@@ -18,11 +17,7 @@ UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
 PROCESSED_FOLDER = os.path.join(os.getcwd(), 'processed')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PROCESSED_FOLDER, exist_ok=True)
-
-# --- MediaPipe Setup ---
-mp_pose = mp.solutions.pose
-pose = mp_pose.Pose()
-mp_drawing = mp.solutions.drawing_utils
+    
 
 # --- Route: Home Upload Page ---
 @app.route('/')
