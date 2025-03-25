@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Live Sync Visual Wall</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    video {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      transition: filter 0.15s ease, transform 0.1s ease, opacity 0.3s ease;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    .flash {
+      filter: brightness(2.2) contrast(1.8) saturate(2.5) hue-rotate(60deg);
+      box-shadow: 0 0 60px rgba(255, 255, 255, 0.4);
+    }
+
+    audio {
+      display: none;
+    }
+
+    #startButton {
+      position: absolute;
+      top: 20px;
+      padding: 10px 20px;
+      font-size: 20px;
+      background: #fff;
+      border: none;
+      border-radius: 10px;
+      z-index: 2;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <button id="startButton">Start Show 🎵</button>
+
+  <audio id="music" src="/static/music/song.mp3"></audio>
+  <video id="vj" playsinline></video>
+
+  <script>
+ const player = document.getElementById("vj");
+const music = document.getElementById("music");
+const startButton = document.getElementById("startButton");
+let beatTimes = [];
+let beatIndex = 0;
+let beatCounter = 0;
+
+const videoList = {{ videos|tojson }};
+let videoIndex = 0;
+player.src = `/processed/${videoList[videoIndex]}`;
+
+startButton.addEventListener("click", () => {
+  music.play();
+  player.play();
+  startButton.style.display = "none";
+  startBeatSync();
+});
+
+function startBeatSync() {
+  fetch("/static/music/beat_times.json")
+    .then(res => res.json())
+    .then(beats => {
+      beatTimes = beats;
+      requestAnimationFrame(checkBeat);
+    });
+}
+
+function checkBeat() {
+  if (beatIndex >= beatTimes.length) return;
+
+  const currentTime = music.currentTime;
+  const currentBeat = beatTimes[beatIndex];
+
+  if (Math.abs(currentTime - currentBeat) < 0.05) {
+    triggerVisualBeatFX();
+    beatCounter++;
+    beatIndex++;
+
+    // 🎯 Change video every 8 beats
+    if (beatCounter % 8 === 0) {
+      switchToNextVideo();
+    }
+  }
+
+  requestAnimationFrame(checkBeat);
+}
+
+function triggerVisualBeatFX() {
+  player.classList.add("flash");
+  const dx = Math.random() * 12 - 6;
+  const dy = Math.random() * 12 - 6;
+  player.style.transform = `translate(${dx}px, ${dy}px) scale(1.06)`;
+
+  setTimeout(() => {
+    player.classList.remove("flash");
+    player.style.transform = "translate(0px, 0px) scale(1)";
+  }, 120);
+}
+
+function switchToNextVideo() {
+  videoIndex = (videoIndex + 1) % videoList.length;
+
+  // Smooth fade out
+  player.style.opacity = 0;
+
+  setTimeout(() => {
+    player.src = `/processed/${videoList[videoIndex]}`;
+    player.load();
+    player.play();
+
+    // Fade in
+    player.style.opacity = 1;
+  }, 300);
+}
+
+  </script>
+</body>
+</html>
